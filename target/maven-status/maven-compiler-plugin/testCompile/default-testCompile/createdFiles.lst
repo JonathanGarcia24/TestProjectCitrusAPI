@@ -1,0 +1,8 @@
+com/citrus/myproject/Master.class
+com/citrus/myproject/paternsTest/SampleJavaJunit4IT.class
+com/citrus/myproject/paternsTest/SampleXmlIT.class
+com/citrus/myproject/paternsTest/SampleJavaIT.class
+com/citrus/myproject/paternsTest/DataProviderIT.class
+com/citrus/myproject/paternsTest/ResourceInjection_IT.class
+com/citrus/myproject/paternsTest/ResourceInjectionIT.class
+com/citrus/myproject/API_Test.class
