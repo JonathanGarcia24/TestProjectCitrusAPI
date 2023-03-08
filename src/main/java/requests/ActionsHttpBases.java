@@ -5,6 +5,7 @@ import com.consol.citrus.dsl.builder.HttpClientRequestActionBuilder;
 import com.consol.citrus.dsl.testng.TestNGCitrusTestRunner;
 import com.consol.citrus.http.client.HttpClient;
 import com.consol.citrus.message.Message;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import net.minidev.json.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -98,16 +99,14 @@ public class ActionsHttpBases{
 
         testRunner.http(action -> action.client(client).receive().response().name("reponsePost"));
 
-        String codeRetour = context.getMessageStore().getMessage("reponsePost").getHeader("citrus_http_code").toString();
+        String codeRetour = context.getMessageStore().getMessage("receive(API)").getHeader("citrus_http_status_code").toString();
 
         boolean codeRetourOk;
 
         if(codeRetour.equals("200")) {
-            reponsePost = context.getMessageStore().getMessage("reponsePost").getPayload(clazz);
+            reponsePost = context.getMessageStore().getMessage("receive(API)").getPayload(clazz);
             codeRetourOk = true;
         } else if (codeRetour.equals("202")  || codeRetour.equals("204")) {
-            codeRetourOk = true;
-        } else if (codeRetour.equals("204")) {
             codeRetourOk = true;
         } else {
             codeRetourOk = false;
@@ -115,7 +114,15 @@ public class ActionsHttpBases{
 
         assertEquals("Le post de" + objectName + "est en échec :" , true, codeRetourOk);
 
-        return reponsePost;
+        String reponse = context.getMessageStore().getMessage("receive(API)").getPayload(String.class);
+        JSONParser parser = new JSONParser();
+        try {
+            Object obj = parser.parse(reponse);
+            JSONObject jsonObject = new JSONObject((Map<String, ?>) obj);
+            return (T) jsonObject;
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -138,7 +145,7 @@ public class ActionsHttpBases{
 
 
 
-    public <T> T put(final HttpClient client,final String endpoint,final String ObjectId,final String ObjectName,final Object objectPayload,final Map<String,Object> headers,final TestContext context,final Class<T> clazz){
+    public <T> T put(final HttpClient client,final String endpoint,final String ObjectId,final String objectName,final Object objectPayload,final Map<String,Object> headers,final TestContext context,final Class<T> clazz){
         T reponsePut=null;
 
         testRunner.http(action-> {
@@ -165,11 +172,11 @@ public class ActionsHttpBases{
                 .response()
                 .name("reponsePut"));
 
-        String codeRetour = context.getMessageStore().getMessage("reponsePut").getHeader("citrus_http_status_code").toString();
+        String codeRetour = context.getMessageStore().getMessage("receive(API)").getHeader("citrus_http_status_code").toString();
         boolean codeRetourOk;
 
         if(codeRetour.equals("200")){
-            reponsePut = context.getMessageStore().getMessage("reponsePut").getPayload(clazz);
+            reponsePut = context.getMessageStore().getMessage("receive(API)").getPayload(clazz);
             codeRetourOk = true;
         } else if (codeRetour.equals("204")){
             codeRetourOk = true;
@@ -178,8 +185,17 @@ public class ActionsHttpBases{
             codeRetourOk = false;
         }
 
-        assertEquals(context.getMessageStore().getMessage("reponsePut").toString(),true,codeRetourOk);
-        return reponsePut;
+        assertEquals("La mise à jour de" + objectName + "est en échec :" , true, codeRetourOk);
+
+        String reponse = context.getMessageStore().getMessage("receive(API)").getPayload(String.class);
+        JSONParser parser = new JSONParser();
+        try {
+            Object obj = parser.parse(reponse);
+            JSONObject jsonObject = new JSONObject((Map<String, ?>) obj);
+            return (T) jsonObject;
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
@@ -201,7 +217,7 @@ public class ActionsHttpBases{
     //DELETE
 
 
-    public void delete(final HttpClient client,final String endpoint, final String objectId, final String objectName, final TestContext context){
+    public String delete(final HttpClient client,final String endpoint, final String objectId, final String objectName, final TestContext context){
 
         testRunner.http(action -> action.client(client)
                 .send()
@@ -212,7 +228,7 @@ public class ActionsHttpBases{
         testRunner.http(action -> action.client(client)
                 .receive().response().name("retour_delete"));
 
-        String codeRetour = context.getMessageStore().getMessage("retour_delete").getHeader("citrus_http_status_code").toString();
+        String codeRetour = context.getMessageStore().getMessage("receive(API)").getHeader("citrus_http_status_code").toString();
 
         boolean codeRetourOk;
 
@@ -223,6 +239,10 @@ public class ActionsHttpBases{
         }
 
         assertEquals("Le delete de " + objectName + " est en échec",true,codeRetourOk);
+
+        String reponse = context.getMessageStore().getMessage("receive(API)").getPayload(String.class);
+
+        return reponse;
     }
 
 }
